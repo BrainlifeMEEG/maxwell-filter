@@ -16,7 +16,7 @@ set -e
 set -x
 
 # Make output directories
-mkdir -p out_dir
+mkdir -p out_dir_maxwell_filter
 mkdir -p out_dir_report
 
 # Run the actual python code

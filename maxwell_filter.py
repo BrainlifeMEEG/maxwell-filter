@@ -336,6 +336,12 @@ def main():
     # Read and save optional files
     config, cross_talk_file, calibration_file, events_file, head_pos_file, channels_file, destination = helper.read_optional_files(config, 'out_dir_maxwell_filter')
 
+    # Fall back to repo-bundled calibration files if not provided via Brainlife input
+    if calibration_file is None and os.path.exists('calibration_meg.dat'):
+        calibration_file = 'calibration_meg.dat'
+    if cross_talk_file is None and os.path.exists('crosstalk_meg.fif'):
+        cross_talk_file = 'crosstalk_meg.fif'
+
     # Raise a value error if the user provides both the destination file and the destination parameter
     if config['param_destination'] is not None and destination is not None:
         value_error_message = f"You can't provide both a destination file and a " \
