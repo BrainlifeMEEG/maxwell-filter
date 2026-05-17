@@ -20,4 +20,4 @@ mkdir -p out_dir_maxwell_filter
 mkdir -p out_dir_report
 
 # Run the actual python code
-singularity exec docker://brainlife/mne:0.23dev python3 maxwell_filter.py
+singularity exec docker://brainlife/mne:1.2.1 python3 maxwell_filter.py
