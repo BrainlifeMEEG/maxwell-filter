@@ -52,11 +52,11 @@ destination_coords : str or list, optional
 
 Outputs
 -------
-out_dir/meg.fif : str
+out_dir/raw.fif : str
     Maxwell-filtered MEG data.
 out_dir/channels.tsv : str
     Updated channels file with interpolated bad channels marked good (if channels file provided).
-out_report/report_maxwell_filter.html : str
+out_report/report.html : str
     HTML report with before/after comparisons and parameter summary.
 product.json : str
     Metadata for Brainlife.io interface.
@@ -87,6 +87,7 @@ from brainlife_utils import (
     message_optional_files_in_reports,
     create_product_json,
     add_info_to_product,
+    require_config_keys,
 )
 
 # Setup environment
@@ -94,6 +95,7 @@ setup_matplotlib_backend()
 
 # Load configuration
 config = load_config()
+require_config_keys(config, ['fif'])
 
 # Create output directories
 ensure_output_dirs('out_dir', 'out_report')
@@ -221,7 +223,7 @@ try:
     )
 
     # Save filtered data
-    raw_maxwell.save('out_dir/meg.fif', overwrite=True)
+    raw_maxwell.save('out_dir/raw.fif', overwrite=True)
     add_info_to_product(product_items, "Maxwell Filter was applied successfully.", msg_type='success')
 
     # Update channels.tsv if provided (bad channels were interpolated → mark as good)
@@ -295,7 +297,7 @@ try:
     """
     report.add_html(html_params, title='Parameters')
 
-    report.save('out_report/report_maxwell_filter.html', overwrite=True)
+    report.save('out_report/report.html', overwrite=True)
 
 except Exception as e:
     add_info_to_product(product_items, str(e), msg_type='error')
