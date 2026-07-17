@@ -297,7 +297,7 @@ try:
     """
     report.add_html(html_params, title='Parameters')
 
-    report.save('out_report/report.html', overwrite=True)
+    report.save('out_report/report.html', overwrite=True, verbose=False)
 
 except Exception as e:
     add_info_to_product(product_items, str(e), msg_type='error')
