@@ -14,7 +14,10 @@ calibration : str, optional
 crosstalk : str, optional
     Path to cross-talk correction (.fif) file.
 headshape : str, optional
-    Path to head position (.pos) file for movement compensation.
+    Path to head position (.pos) file for movement compensation, from the
+    opt01 override bundle (app-head-pos's output) only -- the primary
+    neuro/meg/fif input's own "headshape" file is BIDS digitization points,
+    a different format, and is never used for this parameter.
 destination : str, optional
     Path to destination transformation (.fif) file.
 channels : str, optional
@@ -112,11 +115,22 @@ try:
     if config.get('extended_proj') == '[]':
         config['extended_proj'] = []
 
+    # neuro/meg/fif's primary "headshape" file is the BIDS digitized head
+    # points (coregistration), not a head-position-over-time file -- MNE's
+    # maxwell_filter(head_pos=...) needs the quaternion array format from
+    # mne.chpi.read_head_pos(), which only shows up here via the opt01
+    # "headshape_override" bundle (app-head-pos's output). Detect whether a
+    # real override was given before read_optional_files() pops it from
+    # config and silently falls back to the (wrong-format) primary file.
+    head_pos_override_provided = bool(config.get('headshape_override')) and os.path.exists(
+        config.get('headshape_override', '')
+    )
+
     # Read optional files (crosstalk, calibration, headshape, channels, destination)
     config, files_dict = read_optional_files(config, 'out_dir')
     cross_talk_file = files_dict['cross_talk_file']
     calibration_file = files_dict['calibration_file']
-    head_pos_file = files_dict['head_pos_file']
+    head_pos_file = files_dict['head_pos_file'] if head_pos_override_provided else None
     channels_file = files_dict['channels_file']
     destination = files_dict['destination']
 
@@ -200,11 +214,12 @@ try:
             )
 
     # Apply Maxwell filter
+    head_pos = mne.chpi.read_head_pos(head_pos_file) if head_pos_file is not None else None
     raw_maxwell = mne.preprocessing.maxwell_filter(
         raw,
         calibration=calibration_file,
         cross_talk=cross_talk_file,
-        head_pos=head_pos_file,
+        head_pos=head_pos,
         destination=destination,
         st_duration=config.get('st_duration'),
         st_correlation=config.get('st_correlation', 0.98),
