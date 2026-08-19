@@ -214,6 +214,7 @@ try:
             )
 
     # Apply Maxwell filter
+    print("Applying Maxwell filter (SSS/tSSS)... this may take a while", flush=True)
     head_pos = mne.chpi.read_head_pos(head_pos_file) if head_pos_file is not None else None
     raw_maxwell = mne.preprocessing.maxwell_filter(
         raw,

@@ -17,48 +17,9 @@ set -x
 
 # Run the actual python code.
 #
-# The web UI shows the last line this job wrote to stdout as its live status.
-# Wrap the run in a heartbeat ticker so that status never goes stale for more
-# than HEARTBEAT_INTERVAL seconds, even during long silent steps (e.g. report
-# generation) where the app itself prints nothing for a while.
-HEARTBEAT_INTERVAL=20
-
-heartbeat() {
-    set +x
-    local elapsed=0
-    while sleep "$HEARTBEAT_INTERVAL"; do
-        elapsed=$((elapsed + HEARTBEAT_INTERVAL))
-        echo "[heartbeat] still running (${elapsed}s elapsed)"
-    done
-}
-
 # -u: unbuffered stdout, so print() output lands in the slurm log immediately
-# instead of sitting in a block-buffered pipe.
-singularity exec docker://brainlifemeeg/mne:1.12.1 python3 -u main.py &
-APP_PID=$!
-
-heartbeat &
-HB_PID=$!
-
-# Slurm sends SIGTERM (then SIGKILL) on cancellation/walltime timeout; make
-# sure neither the containerized job nor the ticker are left running.
-cleanup_and_exit() {
-    kill -TERM "$APP_PID" 2>/dev/null
-    kill -KILL "$HB_PID" 2>/dev/null
-    wait "$APP_PID" 2>/dev/null
-    exit 1
-}
-trap cleanup_and_exit TERM INT
-
-# `if wait ...` exempts this from `set -e` so we can still capture the real
-# exit code and run cleanup below.
-if wait "$APP_PID"; then
-    APP_EXIT=0
-else
-    APP_EXIT=$?
-fi
-
-kill "$HB_PID" 2>/dev/null || true
-wait "$HB_PID" 2>/dev/null || true
-
-exit "$APP_EXIT"
+# instead of sitting in a block-buffered pipe. The web UI shows the last line
+# this job wrote to stdout as its live status, so main.py prints a short
+# message right before each step that's slow enough to otherwise leave a
+# stale status behind.
+singularity exec docker://brainlifemeeg/mne:1.12.1 python3 -u main.py
