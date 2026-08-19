@@ -255,6 +255,7 @@ try:
 
     # Recording info + before/after temporal & PSD plots, generated natively by MNE
     # instead of hand-built HTML/figures (mirrors filter-raw's report.add_raw usage).
+    print("Generating report (before/after PSD comparison, may take a while)...", flush=True)
     try:
         report.add_raw(raw, title='Before Maxwell Filter', psd=True)
         report.add_raw(raw_maxwell, title='After Maxwell Filter', psd=True)
