@@ -59,7 +59,7 @@ out_dir/raw.fif : str
     Maxwell-filtered MEG data.
 out_dir_channels/channels.tsv : str
     Updated channels file with interpolated bad channels marked good (if channels file provided).
-out_report/report.html : str
+out_dir_report/report.html : str
     HTML report with before/after comparisons and parameter summary.
 product.json : str
     Metadata for Brainlife.io interface.
@@ -101,7 +101,7 @@ config = load_config()
 require_config_keys(config, ['fif'])
 
 # Create output directories
-ensure_output_dirs('out_dir', 'out_dir_channels', 'out_report')
+ensure_output_dirs('out_dir', 'out_dir_channels', 'out_dir_report')
 
 # Initialize product items for Brainlife.io
 product_items = []
@@ -290,7 +290,7 @@ try:
     """
     report.add_html(html_params, title='Parameters')
 
-    report.save('out_report/report.html', overwrite=True, verbose=False)
+    report.save('out_dir_report/report.html', overwrite=True, verbose=False)
 
 except Exception as e:
     add_info_to_product(product_items, str(e), msg_type='error')
