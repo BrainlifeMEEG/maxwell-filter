@@ -57,7 +57,7 @@ Outputs
 -------
 out_dir/raw.fif : str
     Maxwell-filtered MEG data.
-out_dir/channels.tsv : str
+out_dir_channels/channels.tsv : str
     Updated channels file with interpolated bad channels marked good (if channels file provided).
 out_report/report.html : str
     HTML report with before/after comparisons and parameter summary.
@@ -101,7 +101,7 @@ config = load_config()
 require_config_keys(config, ['fif'])
 
 # Create output directories
-ensure_output_dirs('out_dir', 'out_report')
+ensure_output_dirs('out_dir', 'out_dir_channels', 'out_report')
 
 # Initialize product items for Brainlife.io
 product_items = []
@@ -238,7 +238,7 @@ try:
     )
 
     # Save filtered data
-    raw_maxwell.save('out_dir/raw.fif', overwrite=True)
+    raw_maxwell.save('out_dir/meg.fif', overwrite=True)
     add_info_to_product(product_items, "Maxwell Filter was applied successfully.", msg_type='success')
 
     # Update channels.tsv if provided (bad channels were interpolated → mark as good)
@@ -247,41 +247,17 @@ try:
         for bad in bad_channels:
             idx = df_channels[df_channels['name'] == bad].index
             df_channels.loc[idx, 'status'] = 'good'
-        df_channels.to_csv('out_dir/channels.tsv', sep='\t', index=False)
+        df_channels.to_csv('out_dir_channels/channels.tsv', sep='\t', index=False)
 
     # -- Generate HTML report --
     report_files = message_optional_files_in_reports(files_dict)
-    report = mne.Report(title='Results Maxwell Filter', verbose=True)
+    report = mne.Report(title='Results Maxwell Filter', verbose=False)
 
-    # Data info section
-    html_info = f"""
-    <table style="border-collapse: collapse;">
-        <tr><td style="border: 1px dashed black; padding: 8px;">Input file: {data_file}</td></tr>
-        <tr><td style="border: 1px dashed black; padding: 8px;">Bad channels: {bad_channels}</td></tr>
-        <tr><td style="border: 1px dashed black; padding: 8px;">Sampling frequency: {raw.info['sfreq']} Hz</td></tr>
-        <tr><td style="border: 1px dashed black; padding: 8px;">Highpass: {raw.info['highpass']} Hz</td></tr>
-        <tr><td style="border: 1px dashed black; padding: 8px;">Lowpass: {raw.info['lowpass']} Hz</td></tr>
-    </table>
-    """
-    report.add_html(html_info, title='MEG Recording Features')
-
-    # Before/after plots
+    # Recording info + before/after temporal & PSD plots, generated natively by MNE
+    # instead of hand-built HTML/figures (mirrors filter-raw's report.add_raw usage).
     try:
-        fig_before = raw.copy().pick(['meg'], exclude='bads').plot(
-            duration=10, scalings='auto', butterfly=False,
-            show_scrollbars=False, proj=False, show=False,
-        )
-        fig_after = raw_maxwell.copy().pick(['meg'], exclude='bads').plot(
-            duration=10, scalings='auto', butterfly=False,
-            show_scrollbars=False, proj=False, show=False,
-        )
-        fig_psd_before = raw.compute_psd().plot(show=False)
-        fig_psd_after = raw_maxwell.compute_psd().plot(show=False)
-
-        report.add_figure(fig_before, title='MEG Signals Before Maxwell Filter', section='Temporal Domain')
-        report.add_figure(fig_after, title='MEG Signals After Maxwell Filter', section='Temporal Domain')
-        report.add_figure(fig_psd_before, title='PSD Before Maxwell Filter', section='Frequency Domain')
-        report.add_figure(fig_psd_after, title='PSD After Maxwell Filter', section='Frequency Domain')
+        report.add_raw(raw, title='Before Maxwell Filter', psd=True)
+        report.add_raw(raw_maxwell, title='After Maxwell Filter', psd=True)
     except Exception as e:
         print(f"Warning: Could not generate plots: {e}")
 
