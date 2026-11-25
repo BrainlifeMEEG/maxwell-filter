@@ -1,5 +1,64 @@
 # Apply Maxwell Filtering
 
+<!-- brainlife-app:begin (generated from the App manifest; edit the manifest, not this block) -->
+
+> **Apply Maxwell filtering on MEG signals recorded with Elketa (or MEGIN or Neuromag) machine using MNE Python.**
+
+Wraps mne.preprocessing.maxwell_filter to suppress environmental and system noise in continuous MEG with signal-space separation (SSS), or temporal SSS when st_duration is set, with optional head-movement compensation from a head-position file. Bad channels from a BIDS channels.tsv are interpolated and reported as good. Use it on Elekta/MEGIN/Neuromag recordings before further MEG preprocessing.
+
+| | |
+|---|---|
+| 📥 **Inputs** | `neuro/meg/fif` · `neuro/meg/fif-override` (optional) |
+| 📤 **Outputs** | `neuro/meg/fif` · `report/html` · `neuro/meg/fif-override` |
+| 🐳 **Container** | `brainlifemeeg/mne:1.12.1` |
+| ⚙️ **Resources** | 12 GB memory · 2 h walltime |
+| 🔗 **Run it** | [doi.org/10.25663/brainlife.app.476](https://doi.org/10.25663/brainlife.app.476) |
+
+#### 📥 Inputs
+
+| Input | Datatype | Required | Description |
+|---|---|---|---|
+| `fif01` | `neuro/meg/fif` | yes | Maxwell filtering will be applied to MEG signals. |
+| `opt01` | `neuro/meg/fif-override` | no | Channels.tsv file in a BIDS compliant format (computed with app-bad-channels), head positions in a .pos file (computed by app-head-pos), and destination file (computed by app-mean-tranformation-matrix). These files will override the events.tsv and channels.tsv linked to the neuro/meg/fif datatype. |
+
+#### 📤 Outputs
+
+| Output | Datatype | Description |
+|---|---|---|
+| `out_dir` | `neuro/meg/fif` | MEG signals after Maxwell filtering |
+| `out_dir_report` | `report/html` | HTML report with plots of MEG signals before and after Maxwell filtering |
+| `out_dir_channels` | `neuro/meg/fif-override` | Updated channels.tsv with previously-bad channels marked good (only produced if a channels file was provided). |
+
+<details>
+<summary><b>⚙️ Parameters</b> (15)</summary>
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `int_order` | number | `8` | Order of internal component of spherical expansion. The number provided must be an integer. |
+| `ext_order` | number | `3` | Order of external component of spherical expansion. The number provided must be an integer. |
+| `st_duration` | number |  | If not None, apply tSSS with specified buffer duration (in seconds). The number provided can be a float. |
+| `st_correlation` | number | `0.98` | Correlation limit between inner and outer subspaces used to reject overlapping intersecting inner/outer signals during tSSS. The number provided can be a float. |
+| `coord_frame` | enum | `head` | The coordinate frame that the origin is specified in, either meg or head. Options: `head`, `meg`. |
+| `regularize` | enum | `in` | The destination location for the head, either in or None. Options: `in`. |
+| `ignore_ref` | boolean | `false` | If True, do not include reference channels in compensation. |
+| `bad_condition` | enum | `error` | How to deal with ill-conditioned SSS matrices, either 'error', 'warning', 'info', or 'ignore'. Options: `error`, `warning`, `info`, `ignore`. |
+| `st_fixed` | boolean | `true` | If True, do tSSS using the median head position during the st_duration window. |
+| `st_only` | boolean | `false` | If True, only tSSS projection of MEG data will be performed on the output data. |
+| `origin` | string | `auto` | Origin of internal and external multipolar moment space in meters. Can be "auto" or three numbers separated by a comma (example: 0, 0, 0). |
+| `skip_by_annotation` | string | `[edge, bad_acq_skip]` | Any annotation segment that begins with the given string will not be included in filtering, and segments on either side of the given excluded annotated segment will be filtered separately. Can be an empty list []. |
+| `mag_scale` | string | `100` | The magnetometer scale-factor used to bring the magnetometers to approximately the same order of magnitude as the gradiometers, as they have different units (T vs T/m). The number provided can be a float. Can be "auto". |
+| `destination` | string |  | The 3 elements giving the coordinates to translate to (with no rotations). Can be None or three numbers separated by a comma (example: 0, 0, 0). This parameter must be set to None when a desrination file is provided. |
+| `extended_proj` | string | `[]` | The empty-room projection vectors used to extend the external SSS basis (i.e., use eSSS). |
+
+</details>
+
+📚 **References used by this App:**
+- Hayashi S, et al. brainlife.io: a decentralized and open-source cloud platform to support neuroscience research. Nat Methods 21:809-813 (2024). [doi:10.1038/s41592-024-02237-2](https://doi.org/10.1038/s41592-024-02237-2)
+- Gramfort A, et al. MEG and EEG data analysis with MNE-Python. Front Neurosci 7:267 (2013). [doi:10.3389/fnins.2013.00267](https://doi.org/10.3389/fnins.2013.00267)
+- Taulu S, Kajola M. Presentation of electromagnetic multichannel data: The signal space separation method. J Appl Phys 97 (2005). [doi:10.1063/1.1935742](https://doi.org/10.1063/1.1935742)
+
+<!-- brainlife-app:end -->
+
 [![Run on Brainlife.io](https://img.shields.io/badge/Brainlife-bl.app.476-blue.svg)](https://doi.org/10.25663/brainlife.app.476)
 
 ## Description
